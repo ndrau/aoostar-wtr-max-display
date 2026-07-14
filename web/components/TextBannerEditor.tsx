@@ -6,6 +6,10 @@ import {
   type BannerCorner,
   type SensorFieldId,
 } from "@/lib/sensor-fields";
+import {
+  TEXT_BANNER_FONT_MAX,
+  TEXT_BANNER_FONT_MIN,
+} from "@/lib/text-banner-font";
 import type { TextBannerSettings } from "@/lib/types";
 
 const COLOR_PRESETS = [
@@ -78,6 +82,49 @@ export function TextBannerEditor({
         />
         <span className="field-hint">{textBanner.text.length}/80 Zeichen</span>
       </div>
+
+      <label className="switch-row">
+        <input
+          type="checkbox"
+          checked={textBanner.fontSizeAuto}
+          onChange={(event) =>
+            onChange({
+              ...textBanner,
+              fontSizeAuto: event.target.checked,
+            })
+          }
+        />
+        <span>
+          <strong>Automatische Schriftgröße</strong>
+          <small>Passt die Größe an die Textlänge an (empfohlen).</small>
+        </span>
+      </label>
+
+      {!textBanner.fontSizeAuto ? (
+        <div className="field">
+          <label htmlFor="banner-font-size">
+            Schriftgröße ({textBanner.fontSize}px)
+          </label>
+          <input
+            id="banner-font-size"
+            type="range"
+            min={TEXT_BANNER_FONT_MIN}
+            max={TEXT_BANNER_FONT_MAX}
+            step={1}
+            value={textBanner.fontSize}
+            onChange={(event) =>
+              onChange({
+                ...textBanner,
+                fontSize: Number.parseInt(event.target.value, 10),
+              })
+            }
+          />
+          <div className="range-labels">
+            <span>{TEXT_BANNER_FONT_MIN}px</span>
+            <span>{TEXT_BANNER_FONT_MAX}px</span>
+          </div>
+        </div>
+      ) : null}
 
       <label className="switch-row">
         <input

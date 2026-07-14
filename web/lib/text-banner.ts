@@ -6,11 +6,19 @@ import {
   type BannerCorner,
 } from "./sensor-fields";
 import { TEXT_BANNER_PATH, UPLOAD_DIR } from "./paths";
+import { resolveBannerFontSize } from "./text-banner-font";
 import type { TextBannerSettings } from "./types";
 
 export const DISPLAY_WIDTH = 960;
 export const DISPLAY_HEIGHT = 376;
 const MAX_TEXT_LENGTH = 80;
+
+export {
+  TEXT_BANNER_FONT_DEFAULT,
+  TEXT_BANNER_FONT_MAX,
+  TEXT_BANNER_FONT_MIN,
+} from "./text-banner-font";
+
 const FONT_FAMILY = "DejaVu Sans, Liberation Sans, sans-serif";
 const CORNER_FONT_SIZE = 22;
 const CORNER_PADDING_X = 20;
@@ -45,27 +53,6 @@ function escapeXml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
-}
-
-function estimateFontSize(text: string, lineCount: number): number {
-  const longestLine = text
-    .split("\n")
-    .reduce((max, line) => Math.max(max, line.trim().length), 0);
-
-  const lengthFactor =
-    longestLine <= 6
-      ? 108
-      : longestLine <= 10
-        ? 88
-        : longestLine <= 16
-          ? 68
-          : longestLine <= 24
-            ? 52
-            : longestLine <= 36
-              ? 40
-              : 32;
-
-  return Math.max(28, Math.floor(lengthFactor / Math.max(1, lineCount * 0.85)));
 }
 
 function buildTextElements(text: string, fontSize: number): string {
@@ -117,8 +104,7 @@ export function buildTextBannerSvg(
   sensorValues: Record<string, string> = {},
 ): string {
   const text = settings.text.trim().slice(0, MAX_TEXT_LENGTH);
-  const lineCount = Math.max(1, text.split("\n").length);
-  const fontSize = estimateFontSize(text, lineCount);
+  const fontSize = resolveBannerFontSize(settings);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${DISPLAY_WIDTH}" height="${DISPLAY_HEIGHT}" viewBox="0 0 ${DISPLAY_WIDTH} ${DISPLAY_HEIGHT}">

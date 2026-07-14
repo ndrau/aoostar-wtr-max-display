@@ -2,6 +2,7 @@
 
 import { formatCornerLabel } from "@/lib/sensor-fields";
 import { getModeMeta } from "@/lib/mode-meta";
+import { resolveBannerFontSize } from "@/lib/text-banner-font";
 import type { DisplayConfig } from "@/lib/types";
 
 export function DisplayPreview({
@@ -23,6 +24,8 @@ export function DisplayPreview({
       ["corner-bottom-right", "bottomRight"],
     ] as const;
 
+    const bannerFontSize = resolveBannerFontSize(config.textBanner);
+
     return (
       <div className="preview-shell">
         <div className="preview-meta">
@@ -34,6 +37,7 @@ export function DisplayPreview({
           style={{
             backgroundColor: config.textBanner.backgroundColor,
             color: config.textBanner.textColor,
+            containerType: "inline-size",
           }}
         >
           {config.textBanner.showCornerSensors
@@ -55,7 +59,12 @@ export function DisplayPreview({
                 );
               })
             : null}
-          <span className="text-banner-center">
+          <span
+            className="text-banner-center"
+            style={{
+              fontSize: `calc(${bannerFontSize} / ${960} * 100cqw)`,
+            }}
+          >
             {config.textBanner.text.trim() || "Vorschau"}
           </span>
         </div>

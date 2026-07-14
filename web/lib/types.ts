@@ -21,6 +21,8 @@ export interface TextBannerSettings {
   backgroundColor: string;
   cornerColor: string;
   showCornerSensors: boolean;
+  fontSizeAuto: boolean;
+  fontSize: number;
   corners: TextBannerCorners;
 }
 
@@ -39,6 +41,8 @@ export const DEFAULT_TEXT_BANNER: TextBannerSettings = {
   backgroundColor: "#0b1220",
   cornerColor: "#9aa8c2",
   showCornerSensors: false,
+  fontSizeAuto: true,
+  fontSize: 64,
   corners: DEFAULT_TEXT_BANNER_CORNERS,
 };
 

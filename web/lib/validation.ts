@@ -2,6 +2,11 @@ import path from "path";
 import type { DisplayConfig, DisplayMode, TextBannerSettings } from "./types";
 import { DEFAULT_TEXT_BANNER } from "./types";
 import {
+  TEXT_BANNER_FONT_DEFAULT,
+  TEXT_BANNER_FONT_MAX,
+  TEXT_BANNER_FONT_MIN,
+} from "./text-banner-font";
+import {
   DEFAULT_TEXT_BANNER_CORNERS,
   isSensorFieldId,
   type BannerCorner,
@@ -27,6 +32,24 @@ export function isDisplayMode(value: unknown): value is DisplayMode {
 
 export function isValidTime(value: unknown): value is string {
   return typeof value === "string" && TIME_PATTERN.test(value);
+}
+
+function normalizeFontSize(value: unknown): number {
+  const numeric =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseInt(value, 10)
+        : TEXT_BANNER_FONT_DEFAULT;
+
+  if (Number.isNaN(numeric)) {
+    return TEXT_BANNER_FONT_DEFAULT;
+  }
+
+  return Math.min(
+    TEXT_BANNER_FONT_MAX,
+    Math.max(TEXT_BANNER_FONT_MIN, Math.round(numeric)),
+  );
 }
 
 export function isValidHexColor(value: unknown): value is string {
@@ -110,6 +133,8 @@ export function validateTextBanner(
     backgroundColor: backgroundColor.toLowerCase(),
     cornerColor: cornerColor.toLowerCase(),
     showCornerSensors: input?.showCornerSensors ?? fallback.showCornerSensors,
+    fontSizeAuto: input?.fontSizeAuto ?? fallback.fontSizeAuto,
+    fontSize: normalizeFontSize(input?.fontSize ?? fallback.fontSize),
     corners: validateTextBannerCorners(input?.corners, fallback.corners),
   };
 }
@@ -146,6 +171,11 @@ function mergeTextBanner(
       typeof raw.showCornerSensors === "boolean"
         ? raw.showCornerSensors
         : DEFAULT_TEXT_BANNER.showCornerSensors,
+    fontSizeAuto:
+      typeof raw.fontSizeAuto === "boolean"
+        ? raw.fontSizeAuto
+        : DEFAULT_TEXT_BANNER.fontSizeAuto,
+    fontSize: normalizeFontSize(raw.fontSize),
     corners: mergeTextBannerCorners(raw.corners, DEFAULT_TEXT_BANNER_CORNERS),
   };
 }

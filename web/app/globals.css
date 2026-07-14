@@ -384,6 +384,18 @@ textarea {
   position: relative;
 }
 
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
 .text-banner-center {
   position: absolute;
   inset: 18% 12%;
@@ -391,7 +403,6 @@ textarea {
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: clamp(1.2rem, 3.5vw, 2.2rem);
   font-weight: 700;
   line-height: 1.2;
   white-space: pre-wrap;
