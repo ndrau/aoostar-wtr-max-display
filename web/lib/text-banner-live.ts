@@ -15,15 +15,22 @@ import type { TextBannerSettings } from "./types";
 
 const CORNER_REFRESH_MS = 3_000;
 const CLOCK_REFRESH_MS = 1_000;
+const STOP_WAIT_MS = 5_000;
+const STOP_POLL_MS = 25;
 
 function resolveRefreshMs(settings: TextBannerSettings): number {
   return settings.showClock ? CLOCK_REFRESH_MS : CORNER_REFRESH_MS;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 let refreshTimer: NodeJS.Timeout | null = null;
 let activeSettings: TextBannerSettings | null = null;
 let sensorCollectorActive = false;
 let refreshInFlight = false;
+let liveGeneration = 0;
 
 export function isTextBannerLiveRunning(): boolean {
   return refreshTimer !== null;
@@ -34,16 +41,25 @@ async function refreshTextBanner(): Promise<void> {
     return;
   }
 
+  const generation = liveGeneration;
+  const settings = activeSettings;
   refreshInFlight = true;
 
   try {
-    const snapshot = shouldShowCornerSensors(activeSettings)
+    const snapshot = shouldShowCornerSensors(settings)
       ? await loadAllSensorValues()
       : {};
-    const imagePath = await generateTextBannerImage(
-      activeSettings,
-      snapshot,
-    );
+
+    if (generation !== liveGeneration) {
+      return;
+    }
+
+    const imagePath = await generateTextBannerImage(settings, snapshot);
+
+    if (generation !== liveGeneration) {
+      return;
+    }
+
     await runAsterctlDirect(["--device", DEVICE, "--image", imagePath]);
   } finally {
     refreshInFlight = false;
@@ -94,8 +110,13 @@ export async function stopTextBannerLive(): Promise<void> {
     refreshTimer = null;
   }
 
+  liveGeneration += 1;
   activeSettings = null;
-  refreshInFlight = false;
+
+  const started = Date.now();
+  while (refreshInFlight && Date.now() - started < STOP_WAIT_MS) {
+    await sleep(STOP_POLL_MS);
+  }
 
   if (sensorCollectorActive) {
     await releaseSensorCollector("text-banner");

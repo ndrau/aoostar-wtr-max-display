@@ -1,43 +1,33 @@
 import { applyConfig } from "./display";
 import { appendLog } from "./logger";
 import { readConfig } from "./config";
+import { stopTextBannerLive } from "./text-banner-live";
+import {
+  isWithinDisplayWindow,
+  resolveScheduledDisplayConfig,
+} from "./schedule-helpers";
 import type { DisplayConfig } from "./types";
-import { isValidTime } from "./validation";
-
-function parseTimeToMinutes(value: string): number | null {
-  if (!isValidTime(value)) {
-    return null;
-  }
-
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function getCurrentMinutes(date: Date): number {
-  return date.getHours() * 60 + date.getMinutes();
-}
-
-function isWithinDisplayWindow(config: DisplayConfig, now = new Date()): boolean {
-  const current = getCurrentMinutes(now);
-  const onAt = parseTimeToMinutes(config.schedule.displayOnTime);
-  const offAt = parseTimeToMinutes(config.schedule.displayOffTime);
-
-  if (onAt === null || offAt === null) {
-    return true;
-  }
-
-  if (onAt === offAt) {
-    return true;
-  }
-
-  if (onAt < offAt) {
-    return current >= onAt && current < offAt;
-  }
-
-  return current >= onAt || current < offAt;
-}
 
 let lastAppliedState: "on-window" | "off-window" | null = null;
+
+async function applyScheduledState(config: DisplayConfig): Promise<void> {
+  const activeConfig = resolveScheduledDisplayConfig(config);
+  await stopTextBannerLive();
+  await applyConfig(activeConfig);
+}
+
+export async function applyConfigForSave(config: DisplayConfig): Promise<void> {
+  if (!config.schedule.enabled) {
+    lastAppliedState = null;
+    await stopTextBannerLive();
+    await applyConfig(config);
+    return;
+  }
+
+  const nextState = isWithinDisplayWindow(config) ? "on-window" : "off-window";
+  lastAppliedState = nextState;
+  await applyScheduledState(config);
+}
 
 export async function runScheduledCheck(): Promise<void> {
   const config = await readConfig();
@@ -50,9 +40,12 @@ export async function runScheduledCheck(): Promise<void> {
         "Timer disabled, restoring configured display mode",
         config.displayMode,
       );
+      lastAppliedState = null;
+      await stopTextBannerLive();
       await applyConfig(config);
+    } else {
+      lastAppliedState = null;
     }
-    lastAppliedState = null;
     return;
   }
 
@@ -70,11 +63,6 @@ export async function runScheduledCheck(): Promise<void> {
       "Timer window active, turning display on",
       `on ${config.schedule.displayOnTime}, off ${config.schedule.displayOffTime}`,
     );
-    await applyConfig({
-      ...config,
-      displayMode:
-        config.displayMode === "off" ? "truenas" : config.displayMode,
-    });
   } else {
     await appendLog(
       "info",
@@ -82,10 +70,21 @@ export async function runScheduledCheck(): Promise<void> {
       "Timer window inactive, turning display off",
       `on ${config.schedule.displayOnTime}, off ${config.schedule.displayOffTime}`,
     );
-    await applyConfig({ ...config, displayMode: "off" });
   }
 
   lastAppliedState = nextState;
+  await applyScheduledState(config);
+}
+
+function scheduleAlignedTicks(run: () => void): void {
+  const now = new Date();
+  const msUntilNextMinute =
+    (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+  setTimeout(() => {
+    run();
+    setInterval(run, 60_000);
+  }, Math.max(0, msUntilNextMinute));
 }
 
 export function startScheduler(): void {
@@ -98,6 +97,5 @@ export function startScheduler(): void {
     });
   };
 
-  tick();
-  setInterval(tick, 60_000);
+  scheduleAlignedTicks(tick);
 }

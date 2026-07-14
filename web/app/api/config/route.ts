@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { mergeConfig, readConfig, writeConfig } from "@/lib/config";
-import { applyConfig } from "@/lib/display";
+import { applyConfigForSave } from "@/lib/scheduler";
 import { appendLog } from "@/lib/logger";
 import type { DisplayConfig } from "@/lib/types";
 import { validateConfig } from "@/lib/validation";
@@ -45,7 +45,7 @@ export async function PUT(request: Request) {
       JSON.stringify(nextConfig),
     );
     await writeConfig(nextConfig);
-    await applyConfig(nextConfig);
+    await applyConfigForSave(nextConfig);
 
     return NextResponse.json({ ok: true, config: nextConfig });
   } catch (error) {
