@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { formatCornerLabel } from "@/lib/sensor-fields";
 import { getModeMeta } from "@/lib/mode-meta";
+import { formatBannerClock } from "@/lib/format";
 import { resolveBannerFontSize } from "@/lib/text-banner-font";
 import type { DisplayConfig } from "@/lib/types";
 
@@ -15,6 +17,16 @@ export function DisplayPreview({
   panelRunning: boolean;
 }) {
   const mode = getModeMeta(config.displayMode);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    if (config.displayMode !== "text" || !config.textBanner.showClock) {
+      return;
+    }
+
+    const interval = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(interval);
+  }, [config.displayMode, config.textBanner.showClock]);
 
   if (config.displayMode === "text") {
     const corners = [
@@ -40,6 +52,14 @@ export function DisplayPreview({
             containerType: "inline-size",
           }}
         >
+          {config.textBanner.showClock ? (
+            <span
+              className="text-banner-clock"
+              style={{ color: config.textBanner.cornerColor }}
+            >
+              {formatBannerClock(now)}
+            </span>
+          ) : null}
           {config.textBanner.showCornerSensors
             ? corners.map(([className, corner]) => {
                 const label = formatCornerLabel(

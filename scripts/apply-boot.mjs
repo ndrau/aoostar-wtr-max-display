@@ -22,6 +22,7 @@ const DEFAULT_CONFIG = {
     backgroundColor: "#0b1220",
     cornerColor: "#9aa8c2",
     showCornerSensors: false,
+    showClock: false,
     fontSizeAuto: true,
     fontSize: 64,
     corners: {

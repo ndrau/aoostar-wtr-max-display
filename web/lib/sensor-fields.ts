@@ -385,6 +385,14 @@ export function shouldShowCornerSensors(settings: {
   return settings.showCornerSensors && hasCornerSensors(settings.corners);
 }
 
+export function needsTextBannerLiveRefresh(settings: {
+  showClock: boolean;
+  showCornerSensors: boolean;
+  corners: TextBannerCorners;
+}): boolean {
+  return settings.showClock || shouldShowCornerSensors(settings);
+}
+
 export const DEFAULT_TEXT_BANNER_CORNERS: TextBannerCorners = {
   topLeft: "none",
   topRight: "none",

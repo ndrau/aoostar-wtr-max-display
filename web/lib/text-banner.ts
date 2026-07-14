@@ -6,6 +6,7 @@ import {
   type BannerCorner,
 } from "./sensor-fields";
 import { TEXT_BANNER_PATH, UPLOAD_DIR } from "./paths";
+import { formatBannerClock } from "./format";
 import { resolveBannerFontSize } from "./text-banner-font";
 import type { TextBannerSettings } from "./types";
 
@@ -21,6 +22,8 @@ export {
 
 const FONT_FAMILY = "DejaVu Sans, Liberation Sans, sans-serif";
 const CORNER_FONT_SIZE = 22;
+const CLOCK_FONT_SIZE = 22;
+const CLOCK_Y = 32;
 const CORNER_PADDING_X = 20;
 const CORNER_PADDING_Y = 28;
 
@@ -69,6 +72,22 @@ function buildTextElements(text: string, fontSize: number): string {
     .join("");
 }
 
+function buildClockElement(settings: TextBannerSettings, now: Date): string {
+  if (!settings.showClock) {
+    return "";
+  }
+
+  return `<text
+    x="${DISPLAY_WIDTH / 2}"
+    y="${CLOCK_Y}"
+    fill="${settings.cornerColor}"
+    font-family="${FONT_FAMILY}"
+    font-size="${CLOCK_FONT_SIZE}"
+    font-weight="600"
+    text-anchor="middle"
+  >${escapeXml(formatBannerClock(now))}</text>`;
+}
+
 function buildCornerElements(
   settings: TextBannerSettings,
   sensorValues: Record<string, string>,
@@ -102,6 +121,7 @@ function buildCornerElements(
 export function buildTextBannerSvg(
   settings: TextBannerSettings,
   sensorValues: Record<string, string> = {},
+  now: Date = new Date(),
 ): string {
   const text = settings.text.trim().slice(0, MAX_TEXT_LENGTH);
   const fontSize = resolveBannerFontSize(settings);
@@ -109,6 +129,7 @@ export function buildTextBannerSvg(
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${DISPLAY_WIDTH}" height="${DISPLAY_HEIGHT}" viewBox="0 0 ${DISPLAY_WIDTH} ${DISPLAY_HEIGHT}">
   <rect width="100%" height="100%" fill="${settings.backgroundColor}" />
+  ${buildClockElement(settings, now)}
   <text
     text-anchor="middle"
     fill="${settings.textColor}"
@@ -139,7 +160,7 @@ export async function generateTextBannerImage(
 
   await mkdir(uploadRoot, { recursive: true });
 
-  const svg = buildTextBannerSvg(settings, sensorValues);
+  const svg = buildTextBannerSvg(settings, sensorValues, new Date());
   const png = await sharp(Buffer.from(svg)).png().toBuffer();
   await writeFile(resolved, png);
 

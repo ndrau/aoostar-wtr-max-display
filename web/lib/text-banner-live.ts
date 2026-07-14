@@ -5,7 +5,10 @@ import {
   releaseSensorCollector,
 } from "./sensor-collector";
 import { loadAllSensorValues } from "./sensor-sources";
-import { shouldShowCornerSensors } from "./sensor-fields";
+import {
+  needsTextBannerLiveRefresh,
+  shouldShowCornerSensors,
+} from "./sensor-fields";
 import { generateTextBannerImage } from "./text-banner";
 import { runAsterctlDirect } from "./asterctl-runner";
 import type { TextBannerSettings } from "./types";
@@ -14,6 +17,7 @@ const REFRESH_MS = 3_000;
 
 let refreshTimer: NodeJS.Timeout | null = null;
 let activeSettings: TextBannerSettings | null = null;
+let sensorCollectorActive = false;
 
 export function isTextBannerLiveRunning(): boolean {
   return refreshTimer !== null;
@@ -24,7 +28,9 @@ async function refreshTextBanner(): Promise<void> {
     return;
   }
 
-  const snapshot = await loadAllSensorValues();
+  const snapshot = shouldShowCornerSensors(activeSettings)
+    ? await loadAllSensorValues()
+    : {};
   const imagePath = await generateTextBannerImage(
     activeSettings,
     snapshot,
@@ -37,13 +43,23 @@ export async function startTextBannerLive(
 ): Promise<void> {
   await stopTextBannerLive();
 
-  if (!shouldShowCornerSensors(settings)) {
+  if (!needsTextBannerLiveRefresh(settings)) {
     return;
   }
 
   activeSettings = settings;
-  await acquireSensorCollector("text-banner");
-  await appendLog("info", "text-banner", "Started live corner sensor updates");
+
+  if (shouldShowCornerSensors(settings)) {
+    await acquireSensorCollector("text-banner");
+    sensorCollectorActive = true;
+  }
+
+  await appendLog(
+    "info",
+    "text-banner",
+    "Started live text banner updates",
+    settings.showClock ? "clock" : "corners",
+  );
 
   try {
     await refreshTextBanner();
@@ -67,7 +83,11 @@ export async function stopTextBannerLive(): Promise<void> {
   }
 
   activeSettings = null;
-  await releaseSensorCollector("text-banner");
+
+  if (sensorCollectorActive) {
+    await releaseSensorCollector("text-banner");
+    sensorCollectorActive = false;
+  }
 }
 
 export function updateTextBannerLiveSettings(

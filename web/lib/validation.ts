@@ -133,6 +133,7 @@ export function validateTextBanner(
     backgroundColor: backgroundColor.toLowerCase(),
     cornerColor: cornerColor.toLowerCase(),
     showCornerSensors: input?.showCornerSensors ?? fallback.showCornerSensors,
+    showClock: input?.showClock ?? fallback.showClock,
     fontSizeAuto: input?.fontSizeAuto ?? fallback.fontSizeAuto,
     fontSize: normalizeFontSize(input?.fontSize ?? fallback.fontSize),
     corners: validateTextBannerCorners(input?.corners, fallback.corners),
@@ -171,6 +172,10 @@ function mergeTextBanner(
       typeof raw.showCornerSensors === "boolean"
         ? raw.showCornerSensors
         : DEFAULT_TEXT_BANNER.showCornerSensors,
+    showClock:
+      typeof raw.showClock === "boolean"
+        ? raw.showClock
+        : DEFAULT_TEXT_BANNER.showClock,
     fontSizeAuto:
       typeof raw.fontSizeAuto === "boolean"
         ? raw.fontSizeAuto

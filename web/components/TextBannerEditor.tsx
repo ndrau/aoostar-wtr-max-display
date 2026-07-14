@@ -66,6 +66,11 @@ export function TextBannerEditor({
     });
   }
 
+  const showLiveAccentColor =
+    textBanner.showCornerSensors || textBanner.showClock;
+  const hasLiveRefresh =
+    textBanner.showClock || textBanner.showCornerSensors;
+
   return (
     <div className="stack">
       <div className="field">
@@ -129,6 +134,26 @@ export function TextBannerEditor({
       <label className="switch-row">
         <input
           type="checkbox"
+          checked={textBanner.showClock}
+          onChange={(event) =>
+            onChange({
+              ...textBanner,
+              showClock: event.target.checked,
+            })
+          }
+        />
+        <span>
+          <strong>Uhrzeit oben (live)</strong>
+          <small>
+            Zeigt die aktuelle Zeit mittig oben — aktualisiert sich alle paar
+            Sekunden.
+          </small>
+        </span>
+      </label>
+
+      <label className="switch-row">
+        <input
+          type="checkbox"
           checked={textBanner.showCornerSensors}
           onChange={(event) =>
             onChange({
@@ -170,7 +195,9 @@ export function TextBannerEditor({
         ))}
       </div>
 
-      <div className={`color-grid ${textBanner.showCornerSensors ? "color-grid-3" : "color-grid-2"}`}>
+      <div
+        className={`color-grid ${showLiveAccentColor ? "color-grid-3" : "color-grid-2"}`}
+      >
         <ColorField
           id="banner-text-color"
           label="Textfarbe"
@@ -187,10 +214,10 @@ export function TextBannerEditor({
             updateColor("backgroundColor", value, textBanner.backgroundColor)
           }
         />
-        {textBanner.showCornerSensors ? (
+        {showLiveAccentColor ? (
           <ColorField
             id="banner-corner-color"
-            label="Eckenfarbe"
+            label="Live-Daten-Farbe"
             value={textBanner.cornerColor}
             onChange={(value) =>
               updateColor("cornerColor", value, textBanner.cornerColor)
@@ -230,10 +257,19 @@ export function TextBannerEditor({
             read-only Mount von <code>/sys</code>.
           </p>
         </div>
+      ) : hasLiveRefresh ? (
+        <p className="hint">
+          {textBanner.showClock
+            ? "Uhrzeit wird live aktualisiert"
+            : null}
+          {textBanner.showClock && textBanner.showCornerSensors ? " · " : null}
+          {textBanner.showCornerSensors
+            ? "Ecken-Sensoren brauchen pid: host und /sys"
+            : null}
+        </p>
       ) : (
         <p className="hint">
-          Nur der Schriftzug wird angezeigt — keine Sensor-Aktualisierung im
-          Hintergrund.
+          Nur der Schriftzug wird angezeigt — keine Live-Aktualisierung.
         </p>
       )}
     </div>

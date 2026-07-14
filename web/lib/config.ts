@@ -39,6 +39,10 @@ export function mergeConfig(parsed: Partial<DisplayConfig>): DisplayConfig {
         typeof parsed.textBanner?.showCornerSensors === "boolean"
           ? parsed.textBanner.showCornerSensors
           : DEFAULT_TEXT_BANNER.showCornerSensors,
+      showClock:
+        typeof parsed.textBanner?.showClock === "boolean"
+          ? parsed.textBanner.showClock
+          : DEFAULT_TEXT_BANNER.showClock,
       fontSizeAuto:
         typeof parsed.textBanner?.fontSizeAuto === "boolean"
           ? parsed.textBanner.fontSizeAuto

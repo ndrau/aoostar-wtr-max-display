@@ -409,6 +409,16 @@ input[type="range"] {
   word-break: break-word;
 }
 
+.text-banner-clock {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .text-banner-corner {
   position: absolute;
   font-size: 0.8rem;
