@@ -7,14 +7,22 @@ async function ensureDataDir() {
   await mkdir(UPLOAD_DIR, { recursive: true });
 }
 
-function normalizeDisplayMode(
-  value: Partial<DisplayConfig>["displayMode"],
-): DisplayMode | undefined {
+function normalizeDisplayMode(value: unknown): DisplayMode | undefined {
   if (value === "original") {
     return "sensors";
   }
 
-  return value;
+  if (
+    value === "truenas" ||
+    value === "sensors" ||
+    value === "text" ||
+    value === "custom" ||
+    value === "off"
+  ) {
+    return value;
+  }
+
+  return undefined;
 }
 
 export function mergeConfig(parsed: Partial<DisplayConfig>): DisplayConfig {
